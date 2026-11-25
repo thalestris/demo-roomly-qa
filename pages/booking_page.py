@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from datetime import date
 
-from playwright.sync import Page
+from playwright.sync_api import Page
 
 
 @dataclass(frozen=True)
