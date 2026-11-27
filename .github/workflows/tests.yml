@@ -19,21 +19,11 @@ jobs:
       - name: Write results to job summary
         if: always()
         run: |
-          {
-            echo "## Результат"
-            echo "- Runner: ${{ runner.label }}"
-            echo "- Playwright: $(python3 -m playwright --version)"
-            echo "- Chromium: $(python3 -c 'from playwright.sync_api import sync_playwright as p; print(p.chromium.version)')"
-            python3 - <<'PY'
-            import xml.etree.ElementTree as ET
-            root = ET.parse("artifacts/junit.xml").getroot()
-            print(f"- Тестов: {root.get('tests')}, провалов: {root.get('failures')}, ошибок: {root.get('errors')}, пропущено: {root.get('skipped')}")
-            for tc in root.iter("testcase"):
-                skipped = tc.find("skipped")
-                status = "xfailed" if skipped is not None and skipped.get("message") else ("skipped" if skipped is not None else "passed")
-                print(f"  - {tc.get('name')}: {status}")
-            PY
-          } >> "$GITHUB_STEP_SUMMARY"
+          echo "## Результат" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Runner: ${{ runner.label }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Playwright: $(docker compose run --rm tests python -m playwright --version)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Chromium: $(docker compose run --rm tests python -c 'from playwright.sync_api import sync_playwright as p; print(p.chromium.version)')" >> "$GITHUB_STEP_SUMMARY"
+          docker compose run --rm tests python scripts/summary.py >> "$GITHUB_STEP_SUMMARY"
       - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@v4
