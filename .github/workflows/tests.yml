@@ -16,14 +16,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build and run tests
         run: docker compose run --build --rm tests
-      - name: Write results to job summary
-        if: always()
-        run: |
-          echo "## Результат" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Runner: ${{ runner.label }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Playwright: $(docker compose run --rm tests python -m playwright --version)" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Chromium: $(docker compose run --rm tests python -c 'from playwright.sync_api import sync_playwright as p; print(p.chromium.version)')" >> "$GITHUB_STEP_SUMMARY"
-          docker compose run --rm tests python scripts/summary.py >> "$GITHUB_STEP_SUMMARY"
       - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@v4
