@@ -16,6 +16,24 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build and run tests
         run: docker compose run --build --rm tests
+      - name: Write results to job summary
+        if: always()
+        run: |
+          {
+            echo "## Результат"
+            echo "- Runner: ${{ runner.label }}"
+            echo "- Playwright: $(python3 -m playwright --version)"
+            echo "- Chromium: $(python3 -c 'from playwright.sync_api import sync_playwright as p; print(p.chromium.version)')"
+            python3 - <<'PY'
+            import xml.etree.ElementTree as ET
+            root = ET.parse("artifacts/junit.xml").getroot()
+            print(f"- Тестов: {root.get('tests')}, провалов: {root.get('failures')}, ошибок: {root.get('errors')}, пропущено: {root.get('skipped')}")
+            for tc in root.iter("testcase"):
+                skipped = tc.find("skipped")
+                status = "xfailed" if skipped is not None and skipped.get("message") else ("skipped" if skipped is not None else "passed")
+                print(f"  - {tc.get('name')}: {status}")
+            PY
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@v4
